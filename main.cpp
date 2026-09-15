@@ -1,23 +1,39 @@
+#include <fstream>
 #include <iostream>
+#include <string>
 using namespace std;
-
 
 // Function for displaying menu
 void displayMenu() {
-    cout << "=================" << endl;
-    cout << "   LogSentry"<< endl;
-    cout << "=================" << endl;
+    cout << "=================\n";
+    cout << "   LogSentry\n";
+    cout << "=================\n";
     cout << "\n";
     cout << "\n";
-    cout << "1. Load log file" << endl;
-    cout << "2. Display log summary" << endl;
-    cout << "3. Search logs" << endl;
-    cout << "4. Display suspicious events" << endl;
-    cout << "5. Export report" << endl;
-    cout << "6. Exit" << endl;
+    cout << "1. Load log file\n";
+    cout << "2. Display log summary\n";
+    cout << "3. Search logs\n";
+    cout << "4. Display suspicious events\n";
+    cout << "5. Export report\n";
+    cout << "6. Exit\n";
 }
 
-void loadLogFile() {}
+// Function for loading files into the program
+void loadLogFile() {
+    string filename;
+    cout << "Upload your log file: \n";
+    cin.ignore();
+    getline(cin, filename);
+    cout << "[" << filename << "]\n";
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        cout << "Unable to open file: " << filename << "\n";
+    }
+    else {
+        cout << "Log file loaded \n";
+    }
+}
+
 
 void displayLogSummary() {}
 
@@ -29,36 +45,36 @@ void exportReport() {}
 
 
 // Function  for when user selects menu option and call appropriate function
- void menuSelection() {
+void menuSelection() {
     int selection;
     cout << "Selection: ";
     cin >> selection;
     cout << "You selected: " << selection << endl;
     if (selection == 1) {
-        cout << "Load log file selected";
+        cout << "Load log file selected\n";
         loadLogFile();
     }
     else if (selection == 2) {
-        cout << "Display log summary selected";
+        cout << "Display log summary selected\n";
         displayLogSummary();
     }
     else if (selection == 3) {
-        cout << "Search logs selected";
+        cout << "Search logs selected\n";
         searchLog();
     }
     else if (selection == 4) {
-        cout << "Display suspicious events selected";
+        cout << "Display suspicious events selected\n";
         displaySuspiciousEvents();
     }
     else if (selection == 5) {
-        cout << "Export report";
+        cout << "Export report\n";
         exportReport();
     }
     else if (selection == 6) {
-        cout << "Exiting program";
+        cout << "Exiting program\n";
     }
     else {
-        cout << "Invalid selection" << endl;
+        cout << "Invalid selection\n";
     }
 }
 
@@ -66,6 +82,6 @@ void exportReport() {}
 
 int main() {
     displayMenu();
-
-return 0;
+    menuSelection();
+    return 0;
 }
