@@ -135,7 +135,7 @@ public:
             cout << "Enter username: \n";
             cin >> usernameSelection;
             for (const LogEntry& log : logs) {
-                if (log.date == usernameSelection) {
+                if (log.username == usernameSelection) {
                     matches++;
                     displayLog(log);
                 }
@@ -145,7 +145,7 @@ public:
             cout << "Enter level: \n";
             cin >> levelSelection;
             for (const LogEntry& log : logs) {
-                if (log.date == dateSelection) {
+                if (log.level == levelSelection) {
                     matches++;
                     displayLog(log);
                 }
@@ -155,7 +155,7 @@ public:
             cout << "Enter event: \n";
             cin >> eventSelection;
             for (const LogEntry& log : logs) {
-                if (log.date == dateSelection) {
+                if (log.event == eventSelection) {
                     matches++;
                     displayLog(log);
                 }
@@ -165,7 +165,7 @@ public:
             cout << "Enter time: \n";
             cin >> timeSelection;
             for (const LogEntry& log : logs) {
-                if (log.date == dateSelection) {
+                if (log.time == timeSelection) {
                     matches++;
                     displayLog(log);
                 }
@@ -175,7 +175,6 @@ public:
             cout << "No matching selection found";
         }
     }
-
 
 
         // Function to parse lines
@@ -189,10 +188,9 @@ public:
             return tokens;
         }
 
-
         void displaySuspiciousEvents() {}
-        void exportReport() {}
         void displayLogSummary() {}
+        void exportReport() {}
 
 
         // Function  for when user selects menu option and calls appropriate function
@@ -223,6 +221,7 @@ public:
             }
             else if (selection == 6) {
                 cout << "Exiting program\n";
+
             }
             else {
                 cout << "Invalid selection\n";
@@ -238,3 +237,4 @@ public:
         myLogSentry.displayMenu();
         return 0;
     }
+
