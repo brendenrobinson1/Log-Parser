@@ -4,25 +4,26 @@
 #include <string>
 #include <sstream>
 using namespace std;
+bool keepRunning = true;
 
 
 // Struct defining how each entry should look
 struct LogEntry {
     string date;
     string time;
-    string event;
     string level;
-    string username;
-    string ipAddress;
+    string event;
+    string user;
+    string ip;
 
     explicit LogEntry(const vector<string>& vec) {
         if (vec.size() >= 6) {
             date = vec[0];
             time = vec[1];
-            event = vec[2];
-            level = vec[3];
-            username = vec[4];
-            ipAddress = vec[5];
+            level = vec[2];
+            event = vec[3];
+            user = vec[4];
+            ip = vec[5];
         }
     }
     LogEntry() = default;
@@ -34,11 +35,11 @@ public:
     vector<LogEntry> logs;
 
     void displayLog(const LogEntry& log) {
-        cout << log.ipAddress << " "
+        cout << log.ip << " "
              << log.date << " "
              << log.event << " "
              << log.level << " "
-             << log.username << " "
+             << log.user << " "
              << log.time << "\n";
     }
 
@@ -65,6 +66,9 @@ public:
         LogEntry log;
         string filename;
         string line;
+        string retry;
+        string moreLogs;
+
         cout << "Upload your log file: \n";
         cin.ignore();
         getline(cin, filename);
@@ -73,6 +77,14 @@ public:
 
         if (!file.is_open()) {
             cout << "Unable to open file: " << filename << "\n";
+            cout << "Would you like to try again? [Y/N] \n";
+            cin >> retry;
+            if (retry == "Y") {
+                loadLogFile();
+            }
+            else {
+                displayMenu();
+            }
         }
         else {
             cout << "Log file loaded successfully \n";
@@ -88,7 +100,17 @@ public:
             cout << lineNum << ": " << line << "\n";
             logs.emplace_back(parsedLog);
         }
+        cout << "Do you have anymore logs to upload? [Y/N] \n";
+        cin >> moreLogs;
+        if (moreLogs == "Y") {
+            loadLogFile();
+        }
+        else {
+            displayMenu();
+        }
     }
+
+
 
 
     // Function allowing user to search through logs
@@ -109,13 +131,14 @@ public:
         cout << "Select 4 to filter by level \n";
         cout << "Select 5 to filter by event \n";
         cout << "Select 6 to filter by time \n";
+        cout << "Select 7 to display the main menu";
         cin >> filterSelection;
 
         if (filterSelection == 1) {
             cout << "Enter IP address: \n";
             cin >> ipAddrSelection;
             for (const LogEntry& log : logs) {
-                if (log.ipAddress == ipAddrSelection) {
+                if (log.ip == ipAddrSelection) {
                     matches++;
                     displayLog(log);
                 }
@@ -135,7 +158,7 @@ public:
             cout << "Enter username: \n";
             cin >> usernameSelection;
             for (const LogEntry& log : logs) {
-                if (log.username == usernameSelection) {
+                if (log.user == usernameSelection) {
                     matches++;
                     displayLog(log);
                 }
@@ -170,6 +193,9 @@ public:
                     displayLog(log);
                 }
             }
+        }
+        else if (filterSelection == 7) {
+            displayMenu();
         }
         if (matches == 0) {
             cout << "No matching selection found";
@@ -221,6 +247,7 @@ public:
             }
             else if (selection == 6) {
                 cout << "Exiting program\n";
+                keepRunning = false;
 
             }
             else {
@@ -234,7 +261,11 @@ public:
 
     int main() {
         logSentry myLogSentry;
-        myLogSentry.displayMenu();
-        return 0;
+            while (keepRunning) {
+                myLogSentry.displayMenu();
+            }
+            return 0;
     }
+
+
 
