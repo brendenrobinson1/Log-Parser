@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 using namespace std;
+#include <unordered_set>
 bool keepRunning = true;
 
 
@@ -32,16 +33,8 @@ struct LogEntry {
 
 class logSentry {
 public:
+    // vector to store log entry objects
     vector<LogEntry> logs;
-
-    void displayLog(const LogEntry& log) {
-        cout << log.ip << " "
-             << log.date << " "
-             << log.event << " "
-             << log.level << " "
-             << log.user << " "
-             << log.time << "\n";
-    }
 
 
     // Function for displaying menu
@@ -58,7 +51,7 @@ public:
         cout << "5. Export report\n";
         cout << "6. Exit\n";
         menuSelection();
-    };
+    }
 
 
     // Function for loading files into the program
@@ -82,38 +75,47 @@ public:
             if (retry == "Y") {
                 loadLogFile();
             }
-            else {
-                displayMenu();
-            }
         }
-        else {
+        else 
+            {
             cout << "Log file loaded successfully \n";
-        }
+            }
         int lineNum = 0;
         while (getline(file, line)) {
             lineNum++;
             vector<string> parsedLog = parse(line, ' ');
+            
             if (parsedLog.size() != 6) {
                 cout << "Log line number " << lineNum << " is malformed and was skipped. \n";
                 continue;
             }
+
+            
             cout << lineNum << ": " << line << "\n";
             logs.emplace_back(parsedLog);
         }
+
+        
         cout << "Do you have anymore logs to upload? [Y/N] \n";
         cin >> moreLogs;
+        
         if (moreLogs == "Y") {
             loadLogFile();
         }
-        else {
-            displayMenu();
-        }
+    }
+
+    // helper function for search logs function
+    void displayLog(const LogEntry& log) {
+        cout << log.ip << " "
+             << log.date << " "
+             << log.event << " "
+             << log.level << " "
+             << log.user << " "
+             << log.time << "\n";
     }
 
 
-
-
-    // Function allowing user to search through logs
+    // Function allowing user to search through logs and filter by token
     void searchLog() {
         int filterSelection;
         string ipAddrSelection;
@@ -203,69 +205,99 @@ public:
     }
 
 
-        // Function to parse lines
-        vector<string> parse(const string& line, char delimiter) {
-            vector<string> tokens;
-            stringstream ss(line);
-            string token;
-            while (getline(ss, token, delimiter)) {
-                tokens.push_back(token);
-            }
-            return tokens;
+    // Function to parse lines
+    vector<string> parse(const string& line, char delimiter) {
+        vector<string> tokens;
+        stringstream ss(line);
+        string token;
+        while (getline(ss, token, delimiter)) {
+            tokens.push_back(token);
         }
+        return tokens;
+    }
 
-        void displaySuspiciousEvents() {}
-        void displayLogSummary() {}
-        void exportReport() {}
+    void displaySuspiciousEvents() {}
 
+    // function to display log summary
+    void displayLogSummary() {
+        unordered_set<string> uniqueIpAddresses;
+        unordered_set<string> uniqueUsers;
+        int successLogin = 0;
+        int failureLogin = 0;
+        int info = 0;
+        int warning = 0;
 
-        // Function  for when user selects menu option and calls appropriate function
-        void menuSelection() {
-            int selection;
-            cout << "Selection: ";
-            cin >> selection;
-            cout << "You selected: " << selection << endl;
-            if (selection == 1) {
-                cout << "Load log file selected\n";
-                loadLogFile();
-            }
-            else if (selection == 2) {
-                cout << "Display log summary selected\n";
-                displayLogSummary();
-            }
-            else if (selection == 3) {
-                cout << "Search logs selected\n";
-                searchLog();
-            }
-            else if (selection == 4) {
-                cout << "Display suspicious events selected\n";
-                displaySuspiciousEvents();
-            }
-            else if (selection == 5) {
-                cout << "Export report\n";
-                exportReport();
-            }
-            else if (selection == 6) {
-                cout << "Exiting program\n";
-                keepRunning = false;
+        for (const LogEntry& log : logs) {
 
+            if (log.level == "WARN") {
+                warning++;
             }
-            else {
-                cout << "Invalid selection\n";
+
+            if (log.event == "login" && log.level == "ERROR") {
+                failureLogin++;
             }
+            if (log.level == "INFO") {
+                info++;
+            }
+            if (log.event == "login" && log.level == "INFO") {
+                successLogin++;
+            }
+            uniqueIpAddresses.insert(log.ip);
+            uniqueUsers.insert(log.user);
         }
-    };
+            cout << "There were " << uniqueIpAddresses.size() << " unique ip addresses \n";
+            cout << "There were " << uniqueUsers.size() << " unique usernames \n";
+            cout << "There were " << info << " informational events \n";
+            cout << "There were " << failureLogin << " failures \n";
+            cout << "There were " << successLogin << " successesful logins \n";
+            cout << "There were " << warning << " warnings \n";
+    }
 
+    void exportReport() {}
 
+    // Function  for when user selects menu option and calls appropriate function
+    void menuSelection() {
+        int selection;
+        cout << "Selection: ";
+        cin >> selection;
+        cout << "You selected: " << selection << endl;
+        if (selection == 1) {
+            cout << "Load log file selected\n";
+            loadLogFile();
+        }
+        else if (selection == 2) {
+            cout << "Display log summary selected\n";
+            displayLogSummary();
+        }
+        else if (selection == 3) {
+            cout << "Search logs selected\n";
+            searchLog();
+        }
+        else if (selection == 4) {
+            cout << "Display suspicious events selected\n";
+            displaySuspiciousEvents();
+        }
+        else if (selection == 5) {
+            cout << "Export report\n";
+            exportReport();
+        }
+        else if (selection == 6) {
+            cout << "Exiting program\n";
+            keepRunning = false;
+
+        }
+        else {
+            cout << "Invalid selection\n";
+        }
+    }
+};
 
 
     int main() {
         logSentry myLogSentry;
-            while (keepRunning) {
-                myLogSentry.displayMenu();
-            }
-            return 0;
+        while (keepRunning) {
+            myLogSentry.displayMenu();
+        }
+        return 0;
     }
-
-
 
