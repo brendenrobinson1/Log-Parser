@@ -89,13 +89,9 @@ public:
                 cout << "Log line number " << lineNum << " is malformed and was skipped. \n";
                 continue;
             }
-
-            
             cout << lineNum << ": " << line << "\n";
             logs.emplace_back(parsedLog);
         }
-
-        
         cout << "Do you have anymore logs to upload? [Y/N] \n";
         cin >> moreLogs;
         
