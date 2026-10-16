@@ -3,8 +3,9 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-using namespace std;
+#include <unordered_map>
 #include <unordered_set>
+using namespace std;
 bool keepRunning = true;
 
 
@@ -50,6 +51,7 @@ public:
         cout << "4. Display suspicious events\n";
         cout << "5. Export report\n";
         cout << "6. Exit\n";
+        cout << "\n";
         menuSelection();
     }
 
@@ -76,7 +78,7 @@ public:
                 loadLogFile();
             }
         }
-        else 
+        else
             {
             cout << "Log file loaded successfully \n";
             }
@@ -84,7 +86,6 @@ public:
         while (getline(file, line)) {
             lineNum++;
             vector<string> parsedLog = parse(line, ' ');
-            
             if (parsedLog.size() != 6) {
                 cout << "Log line number " << lineNum << " is malformed and was skipped. \n";
                 continue;
@@ -94,7 +95,6 @@ public:
         }
         cout << "Do you have anymore logs to upload? [Y/N] \n";
         cin >> moreLogs;
-        
         if (moreLogs == "Y") {
             loadLogFile();
         }
@@ -212,7 +212,32 @@ public:
         return tokens;
     }
 
-    void displaySuspiciousEvents() {}
+    
+    void displaySuspiciousEvents() {
+        int suspiciousLoginsCount = 0;
+        unordered_map<string, int> susIpAddresses;
+        unordered_map<string, int> susUsers;
+
+        for (const LogEntry& log: logs) {
+            if (log.level == "ERROR" && log.event == "login") {
+                susIpAddresses[log.ip]++;
+            }
+            else if (log.level == "INFO" && log.event == "login") {
+                if ( susIpAddresses.contains((log.ip) ) && susIpAddresses.at(log.ip) >= 3) {
+                    suspiciousLoginsCount++;
+                }
+            }
+        }
+
+        cout << "Successful logins after 3+ failed attempts:  " << suspiciousLoginsCount << "\n";
+
+		for (const auto& entry : susIpAddresses) {
+			if (entry.second >= 3) {
+			    cout << "suspicious " << entry.first << "\n";
+			}
+		}
+    }
+
 
     // function to display log summary
     void displayLogSummary() {
@@ -224,7 +249,6 @@ public:
         int warning = 0;
 
         for (const LogEntry& log : logs) {
-
             if (log.level == "WARN") {
                 warning++;
             }
@@ -245,18 +269,102 @@ public:
             cout << "There were " << uniqueUsers.size() << " unique usernames \n";
             cout << "There were " << info << " informational events \n";
             cout << "There were " << failureLogin << " failures \n";
-            cout << "There were " << successLogin << " successesful logins \n";
+            cout << "There were " << successLogin << " successful logins \n";
             cout << "There were " << warning << " warnings \n";
     }
 
-    void exportReport() {}
+    void exportReport() {
+        unordered_set<string> uniqueIpAddresses;
+        unordered_set<string> uniqueUsers;
+        unordered_map<string, int> susIpAddresses;
+        int info = 0;
+        int warning = 0;
+        int failedLogins = 0;
+        int successfulLogin = 0;
+        int suspiciousLoginsExport = 0;
+        int susIpCount = 0;
+
+        ofstream report("LogSentry_Report.txt");
+        if (!report.is_open()) {
+            cout << "Unable to open logsentry_report.txt";
+            return;
+        }
+
+        for (const LogEntry& log : logs) {
+            if (log.level == "INFO") {
+                info++;
+            }
+            if (log.level == "WARN") {
+                warning++;
+            }
+            if (log.event == "login" && log.level == "ERROR") {
+                failedLogins++;
+                susIpAddresses[log.ip]++;
+            }
+            if (log.event == "login" && log.level == "INFO") {
+                successfulLogin++;
+            }
+        }
+        for (const LogEntry& log : logs) {
+            uniqueIpAddresses.insert(log.ip);
+            uniqueUsers.insert(log.user);
+        }
+
+
+        for (const auto& entry : susIpAddresses) {
+            if (entry.second >= 3) {
+                susIpCount++;
+            }
+        }
+
+        for (const LogEntry& log: logs) {
+            if (log.level == "INFO" && log.event == "login") {
+                if ( susIpAddresses.contains((log.ip) ) && susIpAddresses.at(log.ip) >= 3) {
+                    suspiciousLoginsExport++;
+                }
+            }
+        }
+
+
+
+            report << "========= LogSentry Report =======\n";
+            report << "\n";
+            report << "\n";
+            cout << "Report generated successfully. \n";
+            report << "\n";
+            report << "\n";
+            report << "There were " << logs.size() << " logs generated successfully.\n";
+            report << "\n";
+            report << "\n";
+            report << "There were " << uniqueIpAddresses.size() << " unique ip addresses \n";
+            report << "\n";
+            report << "\n";
+            report << "There were " << uniqueUsers.size() << " unique usernames \n";
+            report << "\n";
+            report << "There were " << info << " informational events \n";
+            report << "\n";
+            report << "\n";
+            report << "There were " << warning << " warnings \n";
+            report << "\n";
+            report << "\n";
+            report << "There were " << failedLogins << " failed login attempts \n";
+            report << "\n";
+            report << "\n";
+            report << "There were " << successfulLogin << " successful logins \n";
+            report << "\n";
+            report << "\n";
+            report << "IPs with 3+ failed login attempts: " << susIpCount <<"\n";
+            report << "Successful logins after 3+ failures: " << suspiciousLoginsExport << "\n";
+        report.close();
+    }
 
     // Function  for when user selects menu option and calls appropriate function
     void menuSelection() {
         int selection;
         cout << "Selection: ";
         cin >> selection;
-        cout << "You selected: " << selection << endl;
+        cout << "You selected: " << selection << "\n";
+        cout << "\n";
         if (selection == 1) {
             cout << "Load log file selected\n";
             loadLogFile();
@@ -289,6 +397,7 @@ public:
 };
 
 
+
     int main() {
         logSentry myLogSentry;
         while (keepRunning) {
@@ -296,4 +405,5 @@ public:
         }
         return 0;
     }
+
 
