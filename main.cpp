@@ -9,7 +9,7 @@ using namespace std;
 bool keepRunning = true;
 
 
-// Struct defining how each entry should look
+// struct defining how each entry should look
 struct LogEntry {
     string date;
     string time;
@@ -18,14 +18,44 @@ struct LogEntry {
     string user;
     string ip;
 
+    // constructor stripping prefixes and initializing data
     explicit LogEntry(const vector<string>& vec) {
         if (vec.size() >= 6) {
-            date = vec[0];
-            time = vec[1];
-            level = vec[2];
-            event = vec[3];
-            user = vec[4];
-            ip = vec[5];
+            if (vec[0].find('=') != string::npos) {
+                date = vec[0].substr(vec[0].find('=')+1);
+            }
+            else {
+                date = vec[0];
+            }
+            if (vec[1].find('=') != string::npos) {
+                time = vec[1].substr(vec[1].find('=')+1);
+            }
+            else {
+                time = vec[1];
+            }
+            if (vec[2].find('=') != string::npos) {
+                level = vec[2].substr(vec[2].find('=')+1);
+            }
+            else {
+                level = vec[2];
+            }
+            if (vec[3].find('=') != string::npos) {
+                event = vec[3].substr(vec[3].find('=')+1);
+            }
+            else {
+                event = vec[3];
+            }
+            if (vec[4].find('=') != string::npos) {
+                user = vec[4].substr(vec[4].find('=') + 1);
+            } else {
+                user = vec[4];
+            }
+            if (vec[5].find('=') != string::npos) {
+                ip = vec[5].substr(vec[5].find('=')+1);
+            }
+            else {
+                ip = vec[5];
+            }
         }
     }
     LogEntry() = default;
@@ -38,7 +68,7 @@ public:
     vector<LogEntry> logs;
 
 
-    // Function for displaying menu
+    // function for displaying menu
     void displayMenu() {
         cout << "=================\n";
         cout << "   LogSentry\n";
@@ -56,7 +86,7 @@ public:
     }
 
 
-    // Function for loading files into the program
+    // function for loading files into the program
     void loadLogFile() {
         LogEntry log;
         string filename;
@@ -74,8 +104,11 @@ public:
             cout << "Unable to open file: " << filename << "\n";
             cout << "Would you like to try again? [Y/N] \n";
             cin >> retry;
-            if (retry == "Y") {
+            if (retry == "Y" || retry == "y") {
                 loadLogFile();
+            }
+            else {
+                return;
             }
         }
         else
@@ -93,7 +126,7 @@ public:
             cout << lineNum << ": " << line << "\n";
             logs.emplace_back(parsedLog);
         }
-        cout << "Do you have anymore logs to upload? [Y/N] \n";
+        cout << "Do you have any more logs to upload? [Y/N] \n";
         cin >> moreLogs;
         if (moreLogs == "Y") {
             loadLogFile();
@@ -111,7 +144,7 @@ public:
     }
 
 
-    // Function allowing user to search through logs and filter by token
+    // function allowing user to search through logs and filter by token
     void searchLog() {
         int filterSelection;
         string ipAddrSelection;
@@ -129,7 +162,7 @@ public:
         cout << "Select 4 to filter by level \n";
         cout << "Select 5 to filter by event \n";
         cout << "Select 6 to filter by time \n";
-        cout << "Select 7 to display the main menu";
+        cout << "Select 7 to display the main menu \n";
         cin >> filterSelection;
 
         if (filterSelection == 1) {
@@ -201,7 +234,7 @@ public:
     }
 
 
-    // Function to parse lines
+    // function to parse lines
     vector<string> parse(const string& line, char delimiter) {
         vector<string> tokens;
         stringstream ss(line);
@@ -212,7 +245,8 @@ public:
         return tokens;
     }
 
-    
+
+    // function displaying suspicious login activity
     void displaySuspiciousEvents() {
         int suspiciousLoginsCount = 0;
         unordered_map<string, int> susIpAddresses;
@@ -252,7 +286,6 @@ public:
             if (log.level == "WARN") {
                 warning++;
             }
-
             if (log.event == "login" && log.level == "ERROR") {
                 failureLogin++;
             }
@@ -265,7 +298,8 @@ public:
             uniqueIpAddresses.insert(log.ip);
             uniqueUsers.insert(log.user);
         }
-            cout << "There were " << uniqueIpAddresses.size() << " unique ip addresses \n";
+        
+            cout << "There were " << uniqueIpAddresses.size() << " unique IP addresses \n";
             cout << "There were " << uniqueUsers.size() << " unique usernames \n";
             cout << "There were " << info << " informational events \n";
             cout << "There were " << failureLogin << " failures \n";
@@ -273,6 +307,8 @@ public:
             cout << "There were " << warning << " warnings \n";
     }
 
+
+    // function to create and export a report containing statistics about the log entry
     void exportReport() {
         unordered_set<string> uniqueIpAddresses;
         unordered_set<string> uniqueUsers;
@@ -305,18 +341,18 @@ public:
                 successfulLogin++;
             }
         }
+        
         for (const LogEntry& log : logs) {
             uniqueIpAddresses.insert(log.ip);
             uniqueUsers.insert(log.user);
         }
-
-
+        
         for (const auto& entry : susIpAddresses) {
             if (entry.second >= 3) {
                 susIpCount++;
             }
         }
-
+        
         for (const LogEntry& log: logs) {
             if (log.level == "INFO" && log.event == "login") {
                 if ( susIpAddresses.contains((log.ip) ) && susIpAddresses.at(log.ip) >= 3) {
@@ -324,41 +360,32 @@ public:
                 }
             }
         }
-
-
-
+        
             report << "========= LogSentry Report =======\n";
             report << "\n";
             report << "\n";
             cout << "Report generated successfully. \n";
             report << "\n";
-            report << "\n";
             report << "There were " << logs.size() << " logs generated successfully.\n";
             report << "\n";
+            report << "There were " << uniqueIpAddresses.size() << " unique ip addresses. \n";
             report << "\n";
-            report << "There were " << uniqueIpAddresses.size() << " unique ip addresses \n";
+            report << "There were " << uniqueUsers.size() << " unique usernames. \n";
             report << "\n";
+            report << "There were " << info << " informational events. \n";
             report << "\n";
-            report << "There were " << uniqueUsers.size() << " unique usernames \n";
+            report << "There were " << warning << " warnings. \n";
             report << "\n";
-            report << "There were " << info << " informational events \n";
+            report << "There were " << failedLogins << " failed login attempts. \n";
             report << "\n";
-            report << "\n";
-            report << "There were " << warning << " warnings \n";
-            report << "\n";
-            report << "\n";
-            report << "There were " << failedLogins << " failed login attempts \n";
-            report << "\n";
-            report << "\n";
-            report << "There were " << successfulLogin << " successful logins \n";
-            report << "\n";
+            report << "There were " << successfulLogin << " successful logins. \n";
             report << "\n";
             report << "IPs with 3+ failed login attempts: " << susIpCount <<"\n";
+            report << "\n";
             report << "Successful logins after 3+ failures: " << suspiciousLoginsExport << "\n";
-        report.close();
     }
 
-    // Function  for when user selects menu option and calls appropriate function
+    // function  for when user selects menu option and calls appropriate function
     void menuSelection() {
         int selection;
         cout << "Selection: ";
@@ -405,5 +432,3 @@ public:
         }
         return 0;
     }
-
-
